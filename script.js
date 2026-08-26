@@ -151,7 +151,7 @@ const opciones = {
     username: "TenderWeb",
 
     // Mantené acá tu contraseña actual de HiveMQ.
-    password: "EscuelaTecnica1"
+    password: "ETecnica1"
 
 };
 
