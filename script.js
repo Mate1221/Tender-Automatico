@@ -42,3 +42,9 @@ if ("serviceWorker" in navigator) {
             console.error("Error registrando Service Worker:", error);
         });
 }
+if ("Notification" in window) {
+    Notification.requestPermission()
+        .then((permiso) => {
+            console.log("Permiso de notificaciones:", permiso);
+        });
+}
