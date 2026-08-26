@@ -1,65 +1,222 @@
-importScripts(
-    "https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"
-);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-importScripts(
-    "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging-compat.js"
-);
+import {
+    getMessaging,
+    getToken,
+    onMessage
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
 
-firebase.initializeApp({
+// ============================
+// FIREBASE
+// ============================
 
+const firebaseConfig = {
     apiKey: "AIzaSyCxRb2S1VGQFv3RJl0epfIa4aNVYWnR73U",
+    authDomain: "tender-automatico.firebaseapp.com",
+    projectId: "tender-automatico",
+    storageBucket: "tender-automatico.firebasestorage.app",
+    messagingSenderId: "97815083485",
+    appId: "1:97815083485:web:d9e052b9993917bd9b1e344"
+};
 
-    authDomain:
-        "tender-automatico.firebaseapp.com",
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
-    projectId:
-        "tender-automatico",
 
-    storageBucket:
-        "tender-automatico.firebasestorage.app",
+// ============================
+// ELEMENTOS DE LA PÁGINA
+// ============================
 
-    messagingSenderId:
-        "97815083485",
+const estadoTender = document.querySelector(".estado_tender");
+const btnColor = document.querySelector(".btn_color");
 
-    appId:
-        "1:97815083485:web:d9e052b9993917bd9b1e34"
+
+// ============================
+// SERVICE WORKER NORMAL
+// ============================
+
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register("sw.js")
+        .then(() => {
+            console.log("Service Worker registrado");
+        })
+        .catch((error) => {
+            console.error(
+                "Error registrando Service Worker:",
+                error
+            );
+        });
+
+}
+
+
+// ============================
+// NOTIFICACIONES FIREBASE
+// ============================
+
+async function activarNotificaciones() {
+
+    try {
+
+        const permiso =
+            await Notification.requestPermission();
+
+        console.log(
+            "Permiso de notificaciones:",
+            permiso
+        );
+
+        if (permiso !== "granted") {
+            console.log("Notificaciones rechazadas.");
+            return;
+        }
+
+
+        const registroFirebase =
+            await navigator.serviceWorker.register(
+                "/Tender-Automatico/firebase-messaging-sw.js"
+            );
+
+        console.log(
+            "Service Worker de Firebase registrado"
+        );
+
+
+        const token = await getToken(messaging, {
+
+            vapidKey:
+                "BHk4yzBKWjlMb4IEb3LEh3QVDcBHLeT1ixUaBVEqiry9lCxjLNLpFBtCgiE0OiamSZ9PsVG-cOXwwxKdXTuQvDg",
+
+            serviceWorkerRegistration:
+                registroFirebase
+
+        });
+
+
+        if (token) {
+
+            const tokenBox = document.createElement("textarea");
+
+            tokenBox.value = token;
+            tokenBox.style.width = "90%";
+            tokenBox.style.height = "150px";
+            tokenBox.style.margin = "20px auto";
+            tokenBox.style.display = "block";
+
+            document.body.appendChild(tokenBox);
+            
+            console.log(
+                "TOKEN DEL DISPOSITIVO:"
+            );
+
+            console.log(token);
+
+        } else {
+
+            console.log(
+                "No se pudo obtener el token."
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error obteniendo el token:",
+            error
+        );
+
+    }
+
+}
+
+activarNotificaciones();
+
+
+// ============================
+// MENSAJES FIREBASE CON LA WEB ABIERTA
+// ============================
+
+onMessage(messaging, (payload) => {
+
+    console.log(
+        "Notificación recibida:",
+        payload
+    );
 
 });
 
 
-const messaging =
-    firebase.messaging();
+// ============================
+// MQTT
+// ============================
+
+const broker =
+    "wss://d95554d0e6434a35b9a224e50b0525ed.s1.eu.hivemq.cloud:8884/mqtt";
+
+const opciones = {
+
+    username: "TenderWeb",
+
+    // Mantené acá tu contraseña actual de HiveMQ.
+    password: "ETecnica1"
+
+};
+
+const cliente = mqtt.connect(
+    broker,
+    opciones
+);
 
 
-messaging.onBackgroundMessage((payload) => {
+cliente.on("connect", () => {
+
+    console.log("Conectado a HiveMQ");
+
+    cliente.subscribe("tender/lluvia");
+
+});
+
+
+cliente.on("message", (topic, mensaje) => {
+
+    const estado = mensaje.toString();
 
     console.log(
-        "[sw.js] Notificación recibida:",
-        payload
+        "Mensaje recibido:",
+        estado
+    );
+
+    estadoTender.textContent = estado;
+
+
+    btnColor.classList.remove(
+        "btn_color_rojo",
+        "btn_color_verde",
+        "btn_color_azul"
     );
 
 
-    const notificationTitle =
-        payload.notification?.title ||
-        "Tender Automático";
+    if (estado === "Mojado") {
 
+        btnColor.classList.add(
+            "btn_color_rojo"
+        );
 
-    const notificationOptions = {
+    } else if (estado === "Seco") {
 
-        body:
-            payload.notification?.body ||
-            "Se detectó un cambio.",
+        btnColor.classList.add(
+            "btn_color_verde"
+        );
 
-        icon: "/icon.png"
+    } else {
 
-    };
+        btnColor.classList.add(
+            "btn_color_azul"
+        );
 
-
-    self.registration.showNotification(
-        notificationTitle,
-        notificationOptions
-    );
+    }
 
 });
