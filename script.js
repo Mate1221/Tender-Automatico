@@ -151,7 +151,7 @@ const opciones = {
     username: "TenderWeb",
 
     // Mantené acá tu contraseña actual de HiveMQ.
-    password: "TU_CONTRASEÑA_MQTT"
+    password: "EscuelaTecnica1"
 
 };
 
