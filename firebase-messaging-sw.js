@@ -39,4 +39,4 @@ messaging.onBackgroundMessage((payload) => {
         titulo,
         opciones
     );
-});
+}); 
