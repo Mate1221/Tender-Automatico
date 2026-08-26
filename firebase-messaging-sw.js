@@ -7,12 +7,12 @@ importScripts(
 );
 
 firebase.initializeApp({
-    apiKey: "TU_API_KEY",
+    apiKey: "AIzaSyCxRb2S1VGQFv3RJl0epfIa4aNVYWnR73U",
     authDomain: "tender-automatico.firebaseapp.com",
     projectId: "tender-automatico",
     storageBucket: "tender-automatico.firebasestorage.app",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
+    messagingSenderId: "97815083485",
+    appId: "1:97815083485:web:d9e052b9993917bd9b1e34"
 });
 
 const messaging = firebase.messaging();
