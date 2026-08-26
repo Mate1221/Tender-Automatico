@@ -97,6 +97,7 @@ async function activarNotificaciones() {
 
         if (token) {
 
+            alert("TOKEN DEL CELULAR:\n\n" + token);
             console.log(
                 "TOKEN DEL DISPOSITIVO:"
             );
