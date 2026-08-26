@@ -97,20 +97,6 @@ async function activarNotificaciones() {
 
         if (token) {
 
-            const tokenBox = document.createElement("textarea");
-
-            tokenBox.value = token;
-            tokenBox.readOnly = true;
-            
-            tokenBox.style.position = "fixed";
-            tokenBox.style.top = "20px";
-            tokenBox.style.left = "5%";
-            tokenBox.style.width = "90%";
-            tokenBox.style.height = "150px";
-            tokenBox.style.zIndex = "99999";
-            
-            document.body.appendChild(tokenBox);
-
             console.log(
                 "TOKEN DEL DISPOSITIVO:"
             );
