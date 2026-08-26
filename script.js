@@ -7,6 +7,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
 
+// ============================
+// FIREBASE
+// ============================
+
 const firebaseConfig = {
     apiKey: "AIzaSyCxRb2S1VGQFv3RJl0epfIa4aNVYWnR73U",
     authDomain: "tender-automatico.firebaseapp.com",
@@ -16,34 +20,96 @@ const firebaseConfig = {
     appId: "1:97815083485:web:d9e052b9993917bd9b1e344"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 
 // ============================
-// NOTIFICACIONES
+// ELEMENTOS DE LA PÁGINA
+// ============================
+
+const estadoTender = document.querySelector(".estado_tender");
+const btnColor = document.querySelector(".btn_color");
+
+
+// ============================
+// SERVICE WORKER NORMAL
+// ============================
+
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register("sw.js")
+        .then(() => {
+            console.log("Service Worker registrado");
+        })
+        .catch((error) => {
+            console.error(
+                "Error registrando Service Worker:",
+                error
+            );
+        });
+
+}
+
+
+// ============================
+// NOTIFICACIONES FIREBASE
 // ============================
 
 async function activarNotificaciones() {
 
     try {
 
-        const permiso = await Notification.requestPermission();
+        const permiso =
+            await Notification.requestPermission();
 
-        console.log("Permiso:", permiso);
+        console.log(
+            "Permiso de notificaciones:",
+            permiso
+        );
 
         if (permiso !== "granted") {
             console.log("Notificaciones rechazadas.");
             return;
         }
 
+
+        const registroFirebase =
+            await navigator.serviceWorker.register(
+                "/Tender-Automatico/firebase-messaging-sw.js"
+            );
+
+        console.log(
+            "Service Worker de Firebase registrado"
+        );
+
+
         const token = await getToken(messaging, {
-            vapidKey: "BHk4yzBKWjlMb4IEb3LEh3QVDcBHLeT1ixUaBVEqiry9lCxjLNLpFBtCgiE0OiamSZ9PsVG-cOXwwxKdXTuQvDg"
+
+            vapidKey:
+                "BHk4yzBKWjlMb4IEb3LEh3QVDcBHLeT1ixUaBVEqiry9lCxjLNLpFBtCgiE0OiamSZ9PsVG-cOXwwxKdXTuQvDg",
+
+            serviceWorkerRegistration:
+                registroFirebase
+
         });
 
-        console.log("TOKEN DEL DISPOSITIVO:");
-        console.log(token);
+
+        if (token) {
+
+            console.log(
+                "TOKEN DEL DISPOSITIVO:"
+            );
+
+            console.log(token);
+
+        } else {
+
+            console.log(
+                "No se pudo obtener el token."
+            );
+
+        }
 
     } catch (error) {
 
@@ -51,12 +117,16 @@ async function activarNotificaciones() {
             "Error obteniendo el token:",
             error
         );
+
     }
+
 }
+
+activarNotificaciones();
 
 
 // ============================
-// MENSAJES CON LA WEB ABIERTA
+// MENSAJES FIREBASE CON LA WEB ABIERTA
 // ============================
 
 onMessage(messaging, (payload) => {
@@ -69,28 +139,48 @@ onMessage(messaging, (payload) => {
 });
 
 
-activarNotificaciones();
+// ============================
+// MQTT
+// ============================
 
-const estadoTender = document.querySelector(".estado_tender");
-const btnColor = document.querySelector(".btn_color");
-const broker = "wss://d95554d0e6434a35b9a224e50b0525ed.s1.eu.hivemq.cloud:8884/mqtt";
+const broker =
+    "wss://d95554d0e6434a35b9a224e50b0525ed.s1.eu.hivemq.cloud:8884/mqtt";
 
 const opciones = {
+
     username: "TenderWeb",
-    password: "ETecnica1"
+
+    // Mantené acá tu contraseña actual de HiveMQ.
+    password: "TU_CONTRASEÑA_MQTT"
+
 };
 
-const cliente = mqtt.connect(broker, opciones);
+const cliente = mqtt.connect(
+    broker,
+    opciones
+);
+
 
 cliente.on("connect", () => {
+
     console.log("Conectado a HiveMQ");
+
     cliente.subscribe("tender/lluvia");
+
 });
 
+
 cliente.on("message", (topic, mensaje) => {
+
     const estado = mensaje.toString();
-    console.log("Mensaje recibido:", estado);
+
+    console.log(
+        "Mensaje recibido:",
+        estado
+    );
+
     estadoTender.textContent = estado;
+
 
     btnColor.classList.remove(
         "btn_color_rojo",
@@ -98,27 +188,25 @@ cliente.on("message", (topic, mensaje) => {
         "btn_color_azul"
     );
 
-    if (estado === "Mojado") {
-        btnColor.classList.add("btn_color_rojo");
-    } else if (estado === "Seco") {
-        btnColor.classList.add("btn_color_verde");
-    } else {
-        btnColor.classList.add("btn_color_azul");
-    }
-});
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js")
-        .then(() => {
-            console.log("Service Worker registrado");
-        })
-        .catch((error) => {
-            console.error("Error registrando Service Worker:", error);
-        });
-}
 
-if ("Notification" in window) {
-    Notification.requestPermission()
-        .then((permiso) => {
-            console.log("Permiso de notificaciones:", permiso);
-        });
-}
+    if (estado === "Mojado") {
+
+        btnColor.classList.add(
+            "btn_color_rojo"
+        );
+
+    } else if (estado === "Seco") {
+
+        btnColor.classList.add(
+            "btn_color_verde"
+        );
+
+    } else {
+
+        btnColor.classList.add(
+            "btn_color_azul"
+        );
+
+    }
+
+});
