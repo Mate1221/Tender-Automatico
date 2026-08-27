@@ -95,21 +95,48 @@ async function activarNotificaciones() {
         });
 
 
+        
         if (token) {
 
-            console.log(
-                "TOKEN DEL DISPOSITIVO:"
+            console.log("TOKEN DEL DISPOSITIVO:");
+            console.log(token);
+
+            // ======================================
+            // REGISTRAR ESTE DISPOSITIVO EN EL WORKER
+            // ======================================
+
+            const respuesta = await fetch(
+                "https://tender-notificaciones.matepinamar11.workers.dev/",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        accion: "registrar",
+                        token: token
+                    })
+                }
             );
 
-            console.log(token);
+            const resultado =
+                await respuesta.text();
+
+            console.log(
+                "Respuesta del registro:",
+                resultado
+            );
 
         } else {
 
             console.log(
                 "No se pudo obtener el token."
             );
-
         }
+
+
 
     } catch (error) {
 
